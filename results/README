@@ -1,0 +1,5 @@
+
+Add your DSpace Simple Archive Format (SAF) directory into this "results"
+directory. The SAF directory (which contains the item directories)
+must be named "dspace_saf" (or have a sym-link of that name).
+
