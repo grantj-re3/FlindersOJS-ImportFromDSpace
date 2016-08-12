@@ -4,6 +4,12 @@ A tool for transforming a collection of DSpace Simple Archive Format (SAF)
 items into a "collection" of articles suitable for bulk importing into the
 Open Journal Systems (OJS) application.
 
+Information about DSpace and OJS can be found at:
+- http://www.dspace.org/
+- https://wiki.duraspace.org/display/DSDOC/All+Documentation
+- https://pkp.sfu.ca/ojs/
+- https://pkp.sfu.ca/wiki/index.php?title=OJS_Documentation
+
 
 ## dspace_saf2ojs_wrap.sh tool
 
@@ -29,7 +35,7 @@ $ mkdir MyCollection            # Replace MyCollection with your own collection 
 $ ~/dspace/bin/dspace export -t COLLECTION  -i 123456789/3214 -d MyCollection -n 10001
 ```
 
-- Create results/ojs_import.xml with pointers to PDFs at results/MyCollection/*/*.pdf
+- Create results/ojs_import.xml with pointers to PDFs at results/MyCollection/\*/\*.pdf
 ```
 # Use symlink as dspace_saf2ojs_wrap.sh expects the folder results/dspace_saf
 $ ln -s MyCollection dspace_saf
