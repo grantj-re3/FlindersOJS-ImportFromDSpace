@@ -43,6 +43,118 @@
   <xsl:variable name="language" select="$default_language" />
 
   <xsl:variable name="ojs_subject_delimiter" select="';'" />
+  <xsl:variable name="space" select="' '"/>
+  <xsl:variable name="comma" select="','"/>
+
+  <!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
+  <!-- TEMPLATE-BASED FUNCTIONS - can only return text or element-sequences -->
+  <!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
+  <!-- Recursive function to reverse the word-order of a string (based on
+       space delimiter). Does not normalise-space.
+  -->
+  <xsl:template name="reverse_words">
+    <xsl:param name="words" />
+
+    <xsl:choose>
+      <xsl:when test="contains($words, $space)">
+        <!-- Reverse the words (ie. call me again) for words after the first space. -->
+        <xsl:call-template name="reverse_words">
+          <xsl:with-param name="words" select="substring-after($words, $space)" />
+        </xsl:call-template>
+
+        <!-- Then print the first word afterwards. -->
+        <xsl:value-of select="concat($space, substring-before($words, $space))" />
+      </xsl:when>
+
+      <xsl:otherwise>
+        <!-- No space remains so print the rest -->
+        <xsl:value-of select="$words" />
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
+  <!-- Get surname from a string in one of the following name formats:
+       - Comma separated surname:  "Surname, Givenname1 Givenname2 ... GivennameN"
+       - Single given name:        "Givenname"
+       - Space separated names:    "Givenname1 Givenname2 ... GivennameN Surname"
+
+       Does not handle double-barrelled (or triple-barrelled) surnames
+       if those surnames are separated by space.
+  -->
+  <xsl:template name="get_surname">
+    <xsl:param name="person_name" />
+
+    <xsl:variable name="person_name_raw" select="normalize-space($person_name)" />
+    <xsl:choose>
+      <xsl:when test="contains($person_name_raw, $comma)">
+        <!-- Name format: "Surname, Givenname1 Givenname2 ... GivennameN" -->
+        <xsl:value-of select="normalize-space( substring-before($person_name_raw, $comma) )" />
+      </xsl:when>
+
+      <xsl:when test="not(contains($person_name_raw, $space))">
+        <!-- Name format: "Givenname" -->
+        <xsl:value-of select="''" />
+      </xsl:when>
+
+      <xsl:otherwise>
+        <!-- Name format: "Givenname1 Givenname2 ... GivennameN Surname" -->
+        <xsl:variable name="names_rev">
+          <xsl:call-template name="reverse_words">
+            <xsl:with-param name="words" select="$person_name_raw" />
+          </xsl:call-template>
+        </xsl:variable>
+
+        <!-- Return the first word (which is now the surname). -->
+        <xsl:value-of select="substring-before($names_rev, $space)" />
+      </xsl:otherwise>
+
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
+  <!-- Get given names from a string in one of the following name formats:
+       - Comma separated surname:  "Surname, Givenname1 Givenname2 ... GivennameN"
+       - Single given name:        "Givenname"
+       - Space separated names:    "Givenname1 Givenname2 ... GivennameN Surname"
+
+       Does not handle given names of those with double-barrelled (or
+       triple-barrelled) surnames if those surnames are separated by space.
+  -->
+  <xsl:template name="get_given_names">
+    <xsl:param name="person_name" />
+
+    <xsl:variable name="person_name_raw" select="normalize-space($person_name)" />
+    <xsl:choose>
+      <xsl:when test="contains($person_name_raw, $comma)">
+        <!-- Name format: "Surname, Givenname1 Givenname2 ... GivennameN" -->
+        <xsl:value-of select="normalize-space( substring-after($person_name_raw, $comma) )" />
+      </xsl:when>
+
+      <xsl:when test="not(contains($person_name_raw, $space))">
+        <!-- Name format: "Givenname" -->
+        <xsl:value-of select="$person_name_raw" />
+      </xsl:when>
+
+      <xsl:otherwise>
+        <!-- Name format: "Givenname1 Givenname2 ... GivennameN Surname" -->
+        <xsl:variable name="names_rev">
+          <xsl:call-template name="reverse_words">
+            <xsl:with-param name="words" select="$person_name_raw" />
+          </xsl:call-template>
+        </xsl:variable>
+
+        <!-- Omit the first word (ie. omit the surname). -->
+        <xsl:variable name="givennames_rev" select="substring-after($names_rev, $space)" />
+
+        <!-- Return the given names in original (not-reversed) order. -->
+        <xsl:call-template name="reverse_words">
+          <xsl:with-param name="words" select="$givennames_rev" />
+        </xsl:call-template>
+      </xsl:otherwise>
+
+    </xsl:choose>
+  </xsl:template>
 
   <!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
   <!-- TEMPLATES -->
@@ -121,12 +233,24 @@
   <xsl:template match="dcvalue[@element = 'contributor']">
     <xsl:variable name="is_first" select="position()=1" />
 
+    <xsl:variable name="surname">
+      <xsl:call-template name="get_surname">
+        <xsl:with-param name="person_name" select="." />
+      </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="given_names">
+      <xsl:call-template name="get_given_names">
+        <xsl:with-param name="person_name" select="." />
+      </xsl:call-template>
+    </xsl:variable>
+
     <author primary_contact="{$is_first}">
       <lastname>
-        <xsl:value-of select="normalize-space(substring-before(., ','))" />
+        <xsl:value-of select="$surname" />
       </lastname>
       <firstname>
-        <xsl:value-of select="normalize-space( substring-after(., ',') )" />
+        <xsl:value-of select="$given_names" />
       </firstname>
 
       <email />
@@ -155,6 +279,7 @@
 
   <!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
   <!-- FIXME: I assume one galley node per PDF? -->
+  <!-- FIXME: Deal with non-PDF bitstreams. -->
   <xsl:template match="bitstream[@bundle = 'ORIGINAL']">
     <xsl:if test="@file_ext='pdf'">
 
