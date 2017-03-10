@@ -58,10 +58,16 @@ $ cd /to/my/dir
 $ tar zxvpf OJS-ImportFromDSpace-results160805a.tgz
 ```
 
-- Import ojs_import.xml into the "test1" journal (as user admin)
+- Import ojs_import.xml into the "jpath" journal (as user juser)
 ```
 $ cd results
-$ php ~/public_html/tools/importExport.php NativeImportExportPlugin import ojs_import.xml test1 admin
+
+# Gather usage info
+$ php ~/public_html/tools/importExport.php list
+$ php ~/public_html/tools/importExport.php NativeImportExportPlugin usage
+
+# Perform the import!
+$ php ~/public_html/tools/importExport.php NativeImportExportPlugin import ojs_import.xml jpath juser
 ```
 
 - Celebrate!
