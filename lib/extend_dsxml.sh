@@ -29,7 +29,7 @@ fpath_item_handle="$FNAME_HANDLE"	# DSpace SAF handle file
 ##############################################################################
 # Extract bitstream filenames
 ruby_extr_bs_fnames='
-  a = $_.split				# Split contents line by white-space
+  a = $_.chomp.split("\t")		# Split contents line by tab-char
   ext = a[0].gsub(/^.*\./, "")		# Extract file extension
 
   printf("<bitstream %s %s>%s</bitstream>\n",
@@ -44,6 +44,12 @@ bitstream_fnames_xml=`ruby -ne "$ruby_extr_bs_fnames" "$fpath_contents"`
 item_hdl=`cat "$fpath_item_handle"`
 item_hdl_mod=`echo "$item_hdl" |sed 's:/:_:'`
 fpath_item_level_xml="$TEMP_DIR/item_${item_hdl_mod}.xml"
+
+if [ ! -f "$fpath_item_level_xml" ]; then
+  echo "ERROR: File not found; '$fpath_item_level_xml'" >&2
+  echo "  Perhaps you are not processing the same collection as the DSpace Simple Archive Format?" >&2
+  exit 4
+fi
 
 # Print the DSpace SAF XML (with extra/extended data). Comprises:
 # - SAF Dublin Core metadata

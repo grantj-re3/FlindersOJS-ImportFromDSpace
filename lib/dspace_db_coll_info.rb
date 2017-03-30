@@ -136,7 +136,7 @@ class DSpaceDbCollectionInfo
       conn.exec(sql){|result|
         if result.ntuples == 0
           STDERR.puts "Quitting: No records found for report '#{report_key}' with handle: '#{@collection_hdl}'"
-          exit 2
+          exit 3
 
         else
           @reports[report_key] = []

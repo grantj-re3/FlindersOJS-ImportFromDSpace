@@ -123,6 +123,9 @@ extend_dspace_saf_xml() {
     echo "Processing DSpace SAF item at '$rel_bitstream_dir'" >&2
     cmd1="$EXTEND_DSPACE_XML_SCRIPT \"$fpath_dc\" \"$fpath_contents\" \"$fpath_handle\" > \"$fpath_dspace_ext\""
     eval $cmd1
+    res=$?
+
+    [ $res != 0 ] && exit $res		# Exit on error
   done
 }
 

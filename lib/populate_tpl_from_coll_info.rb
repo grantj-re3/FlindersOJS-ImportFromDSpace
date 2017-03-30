@@ -94,7 +94,7 @@ class SubstitutionTemplate
       ]
     else
       STDERR.puts "ERROR: Unrecognised template_label #{template_label.inspect}"
-      exit 1
+      exit 5
     end
 
     fmt = File.read(fpath_tpl_in)	# Get the template
