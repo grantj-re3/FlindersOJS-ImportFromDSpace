@@ -1,0 +1,4 @@
+The app will write temporary results (such as XML fragments) and
+user diagnosic info (such as logs and database query results)
+into this directory.
+
