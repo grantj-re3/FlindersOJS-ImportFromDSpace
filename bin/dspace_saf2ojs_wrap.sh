@@ -36,8 +36,9 @@ source $SH_CONFIG			# Source the shell environment vars
 # Attempt to get the publication date of the collection by getting the
 # oldest dc.date.issued of all items in the collection.
 get_collection_oldest_item_date() {
-  ruby_extr_date_published='puts $_.split(/[<>]/)[2] if $F[1]=="date" && $F[3]=="issued"'
-  collection_date_pub=`ruby -F\" -nae "$ruby_extr_date_published" $SAF_DIR/*/$FNAME_DC |sort |head -1`
+  # Date.parse() will convert dates like "2016-05-18T10:34:11Z" into "2016-05-18"
+  ruby_extr_date_published='puts Date.parse($_.split(/[<>]/)[2]) if $F[1]=="date" && $F[3]=="issued"'
+  collection_date_pub=`ruby -F\" -r date -nae "$ruby_extr_date_published" $SAF_DIR/*/$FNAME_DC |sort |head -1`
 
   if ! echo "$collection_date_pub" |egrep -q "^(19|20)[0-9]{2}(-[0-9]{2}){2}$"; then
     echo "WARNING: Expected oldest item date of YYYY-MM-DD (where century is 19 or 20) but found '$collection_date_pub'" >&2
