@@ -1,0 +1,17 @@
+<collection_level>
+  <collection_id>%s</collection_id>
+  <collection_hdl>%s</collection_hdl>
+  <collection_name>%s</collection_name>
+  <collection_desc>%s</collection_desc>
+  <parent_community_id>%s</parent_community_id>
+  <parent_community_hdl>%s</parent_community_hdl>
+  <parent_community_name>%s</parent_community_name>
+  <volume>%s</volume>
+  <issue>%s</issue>
+  <year>%s</year>
+  <month_name>%s</month_name>
+  <issn_frequent_item>%s</issn_frequent_item>
+  <date_oldest_item>%s</date_oldest_item>
+  <date_from_collection_name>%s</date_from_collection_name>
+</collection_level>
+

@@ -1,0 +1,47 @@
+
+RUBY AND BASH/SH CONSTANTS
+
+Ruby constants specified in the "CommonConfig" module within file:
+- common_config.rb
+
+will be replicated by the app and made available to bash/sh scripts via file:
+- common_config.sh
+
+Hence these constants have global scope. Constants which are local to
+particular ruby and bash/sh files are not expected to be specified
+within common_config.rb.
+
+
+
+TEMPLATES
+
+The template files:
+- dspace_collection_level.tpl.xml
+- dspace_saf2ojs_begin.tpl.xml
+
+will have their fields populated by the app and the results will be written to:
+- dspace_collection_level.xml
+- dspace_saf2ojs_begin.xml
+
+respectively.
+
+
+
+XML WRAPPER-FILES
+
+Multiple DOAJ-record XML elements will be "wrapped" as follows:
+- content of dspace_saf2doaj_begin.xml
+- DOAJ record 1
+- DOAJ record 2
+- ...
+- DOAJ record N
+- content of dspace_saf2doaj_end.xml
+
+Multiple OJS-article XML elements will be "wrapped" as follows:
+- content of dspace_saf2ojs_begin.xml (created via a template as discussed above)
+- OJS article 1
+- OJS article 2
+- ...
+- OJS article N
+- content of dspace_saf2ojs_end.xml
+

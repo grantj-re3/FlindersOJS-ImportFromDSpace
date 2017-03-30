@@ -1,0 +1,13 @@
+    <issues>
+      <issue published="true" current="false" identification="title">
+        <title locale="en_US">%s</title>
+        <description locale="en_US">%s</description>
+        <volume>%s</volume>
+        <number>%s</number>
+        <year>%s</year>
+        <date_published>%s</date_published>
+        <access_date>%s</access_date>
+        <section>
+          <title locale="en_US">Articles</title>
+          <abbrev locale="en_US">ART</abbrev>
+

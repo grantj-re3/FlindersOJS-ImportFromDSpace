@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-     Copyright (c) 2016, Flinders University, South Australia. All rights reserved.
+     Copyright (c) 2016-2017, Flinders University, South Australia. All rights reserved.
      Contributors: Library, Corporate Services, Flinders University.
      See the accompanying LICENSE file (or http://opensource.org/licenses/BSD-3-Clause).
 
@@ -10,12 +10,16 @@
      Format (SAF) item into an XML "article" child-element suitable for
      batch importing into the Open Journal Systems (OJS) application.
 
+     The modifications to the DSpace SAF are performed by the partner to
+     this script - extend_dsxml.sh.
+
      The "article" child-element is a repeating element within the
      "OJS 2.x native XML import/export format". In the OJS source,
      see plugins/importexport/native/sample.xml
 
-     The modifications to the DSpace SAF are performed by the partner to
-     this script - extend_dsxml.sh.
+     The sequence is apparently important for many of the XML elements in the DTD below.
+     - https://github.com/pkp/ojs/blob/ojs-stable-2_4_8/plugins/importexport/native/native-sample.xml
+     - https://github.com/pkp/ojs/blob/ojs-stable-2_4_8/plugins/importexport/native/native.dtd
 -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -39,12 +43,13 @@
   <xsl:param name="rel_bitstream_dir" select="'./'" />
 
   <!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
+  <!-- FIXME: I assume all metadata is in the language below. -->
   <xsl:variable name="default_language" select="'en_US'" />
   <xsl:variable name="language" select="$default_language" />
 
   <xsl:variable name="ojs_subject_delimiter" select="';'" />
-  <xsl:variable name="space" select="' '"/>
-  <xsl:variable name="comma" select="','"/>
+  <xsl:variable name="space" select="' '" />
+  <xsl:variable name="comma" select="','" />
 
   <!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
   <!-- TEMPLATE-BASED FUNCTIONS - can only return text or element-sequences -->
@@ -165,7 +170,7 @@
     <article>
 
       <xsl:apply-templates select="/extended_item/dublin_core/dcvalue[@element != 'subject']" />
-      <xsl:apply-templates select="/extended_item/bitstreams/bitstream" />
+      <xsl:apply-templates select="/extended_item/contents/bitstream" />
 
       <xsl:if test="/extended_item/dublin_core/dcvalue[@element = 'subject']">
         <indexing>
@@ -177,26 +182,6 @@
 
     </article>
   </xsl:template>
-
-  <!-- 
-       FIXME:
-       Issues encountered while converting DSpace SAF XML format to
-       OJS native import format.
-       - DONE Split DSpace single author name field into firstname and surname.
-       - DONE Ok for mandatory author email to be empty.
-       - DONE Ok for author bio to be omitted.
-       - DONE Assumes the first author is the primary contact (but might not
-              really matter (yet) as we don't provide contact email).
-       - DONE Assumes all contributors should be listed as authors.
-       - DONE Combine multiple subjects into single subject field.
-       - DONE Only migrate PDF bitstreams.
-       - How to handle the language property?
-         * DONE Assume default of en_US?
-         * Read for every field but default if no dspace lang property?
-         * As above but with will_force_default option and will_force_dspace option?
-       - The following OJS elements are poorly populated: indexing
-       - The following OJS elements are not populated: htmlgalley
-  -->
 
   <!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
   <!-- Do nothing -->
@@ -229,7 +214,11 @@
   </xsl:template>
 
   <!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
-  <!-- FIXME: I assume below that all contributors are authors (for a journal) -->
+  <!-- 
+       - I assume that all contributors are authors (for a journal).
+       - I assume the first author is the primary contact. (Since we
+         don't provide contact email, perhaps it is irrelevant.)
+  -->
   <xsl:template match="dcvalue[@element = 'contributor']">
     <xsl:variable name="is_first" select="position()=1" />
 
@@ -278,8 +267,12 @@
   </xsl:template>
 
   <!-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% -->
-  <!-- FIXME: I assume one galley node per PDF? -->
-  <!-- FIXME: Deal with non-PDF bitstreams. -->
+  <!--
+       - The DTD specifies one galley node per (PDF) file.
+         * <!ELEMENT article (... (galley?, htmlgalley?)+, ...)>
+         * <!ELEMENT galley (id*, label, file)>
+       - FIXME: I assume every 'ORIGINAL' bitstream in the DSpace journal is a PDF.
+  -->
   <xsl:template match="bitstream[@bundle = 'ORIGINAL']">
     <xsl:if test="@file_ext='pdf'">
 
@@ -304,5 +297,4 @@
   </xsl:template>
 
 </xsl:stylesheet>
-
 
