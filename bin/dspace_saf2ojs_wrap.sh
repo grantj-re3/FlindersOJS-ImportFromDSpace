@@ -36,8 +36,9 @@ source $SH_CONFIG			# Source the shell environment vars
 # Attempt to get the publication date of the collection by getting the
 # oldest dc.date.issued of all items in the collection.
 get_collection_oldest_item_date() {
-  # Date.parse() will convert dates like "2016-05-18T10:34:11Z" into "2016-05-18"
-  ruby_extr_date_published='puts Date.parse($_.split(/[<>]/)[2]) if $F[1]=="date" && $F[3]=="issued"'
+  # Date.parse() will convert dates like "2016-05-18T10:34:11Z" into "2016-05-18".
+  # Years like "2016" will invoke the (empty) rescue clause below.
+  ruby_extr_date_published='begin; puts Date.parse($_.split(/[<>]/)[2]) if $F[1]=="date" && $F[3]=="issued"; rescue; end'
   collection_date_pub=`ruby -F\" -r date -nae "$ruby_extr_date_published" $SAF_DIR/*/$FNAME_DC |sort |head -1`
 
   if ! echo "$collection_date_pub" |egrep -q "^(19|20)[0-9]{2}(-[0-9]{2}){2}$"; then
@@ -176,6 +177,8 @@ build_doaj_xml() {
   echo "Created DOAJ file: $FPATH_DOAJ_IMPORT"
 }
 
+##############################################################################
+# Main
 ##############################################################################
 get_more_collection_data
 process_collection_level_info "$1" "$collection_date_pub" "$collection_issn"

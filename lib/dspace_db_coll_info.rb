@@ -19,8 +19,9 @@ $: << File.expand_path("../lib", File.dirname(__FILE__))
 $: << File.expand_path("../etc", File.dirname(__FILE__))
 $: << "#{ENV['HOME']}/.ds/etc"
 
-require 'dspace_pg_utils'
+require "dspace_pg_utils"
 require "common_config"
+require "object_extra"
 
 ##############################################################################
 class DSpaceDbCollectionInfo
@@ -179,8 +180,9 @@ class DSpaceDbCollectionInfo
       File.open(fpath, "w"){|fh|
         fh.puts "<item_level item_hdl=\"#{item_hdl}\">"
         bitstreams.each{|b|
-          fh.puts "  <bitstream_record filename=\"#{b['filename']}\">"
-          b.sort.each{|key,val| fh.printf "    <%s>%s</%s>\n", key, val, key}
+          # Filename (& some other fields) may contain illegal XML chars (eg. &)
+          fh.puts "  <bitstream_record filename=\"#{b['filename'].encode2(:xml => :attr)}\">"
+          b.sort.each{|key,val| fh.printf "    <%s>%s</%s>\n", key, val.encode2(:xml => :text), key}
           fh.puts "  </bitstream_record>"
         }
         fh.puts "</item_level>"

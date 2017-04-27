@@ -35,10 +35,10 @@ ruby_extr_bs_fnames='
   printf("<bitstream %s %s>%s</bitstream>\n",
     a[1].gsub(/^(bundle):(.*)$/, "\\1=\"\\2\""),
     "file_ext=\"#{ext.downcase}\"",
-    a[0]
+    a[0].encode2(:xml => :text)		# Filename may contain illegal XML chars (eg. &)
   )
 '
-bitstream_fnames_xml=`ruby -ne "$ruby_extr_bs_fnames" "$fpath_contents"`
+bitstream_fnames_xml=`ruby -I "$LIB_DIR" -r object_extra -ne "$ruby_extr_bs_fnames" "$fpath_contents"`
 
 # Point to item-level
 item_hdl=`cat "$fpath_item_handle"`

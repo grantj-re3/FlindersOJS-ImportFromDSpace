@@ -113,10 +113,6 @@ collection_hdl = ARGV[0]
 collection_date_pub = ARGV[1]
 collection_issn = ARGV[2]
 
-# FIXME: Testing
-##collection_hdl = "2328/36222"
-##collection_hdl = "2328/36043"
-
 coll = DSpaceDbCollectionInfo.new(collection_hdl)
 DSpaceDbCollectionInfo::REPORT_INFO.keys.sort{|a,b| a.to_s <=> b.to_s}.each{|rpt|
   coll.populate_report(rpt)
