@@ -16,7 +16,7 @@
 #
 # In addition, this program can process a list of journal-issues
 # (ie. collections) within the same journal (ie. community) if they
-# have been configured within the JOURNALS hash below.
+# have been configured within the JOURNALS hash within common_config.rb.
 #
 # This program assumes:
 # - a journal corresponds to a DSpace community
