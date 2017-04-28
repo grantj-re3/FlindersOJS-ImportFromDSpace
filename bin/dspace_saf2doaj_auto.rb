@@ -45,62 +45,8 @@ require "common_config"
 
 ##############################################################################
 class DSpaceDbCommunityInfo
-  include DSpacePgUtils		# FIXME: RESOURCE_TYPE_IDS[:community] in other scripts
+  include DSpacePgUtils
   include CommonConfig
-
-  # true  = Process 1 collection (ie. journal issue) by date
-  # false = Process a list of collections
-  WILL_PROCESS_1_COLLECTION_BY_DATE = true	# CUSTOMISE
-
-  # Search for journal-issue month & year with this offset from today.
-  # See self.collection_name_regex()
-  DAYS_OFFSET = 7				# CUSTOMISE if WILL_PROCESS_1_COLLECTION_BY_DATE == true
-
-  HANDLE_PREFIX = "123456789"			# CUSTOMISE if WILL_PROCESS_1_COLLECTION_BY_DATE == false
-
-  # CUSTOMISE if WILL_PROCESS_1_COLLECTION_BY_DATE == false
-  JOURNALS = {
-    :wic => {
-      :community_hdl => "#{HANDLE_PREFIX}/27255",
-      :collection_regex_list => [
-        # Regex must match only one collection (ie. journal issue)
-        /February 2014/i,
-          /August 2014/i,
-        /February 2015/i,
-          /August 2015/i,
-        /February 2016/i,
-          /August 2016/i,
-      ],
-    },
-
-    :tnl => {
-      :community_hdl => "#{HANDLE_PREFIX}/3206",
-      :collection_regex_list => [
-        # Regex must match only one collection (ie. journal issue)
-        /November 2008/i,
-             /May 2009/i,
-        /November 2009/i,
-
-             /May 2010/i,
-        /November 2010/i,
-             /May 2011/i,
-        /November 2011/i,
-
-             /May 2012/i,
-        /November 2012/i,
-             /May 2013/i,
-        /November 2013/i,
-
-             /May 2014/i,
-        /November 2014/i,
-             /May 2015/i,
-        /November 2015/i,
-
-             /May 2016/i,
-        /November 2016/i, # Cannot extract volume & issue from Special Issue December 2016. Hence items mapped into November 2016.
-      ],
-    },
-  }
 
   SECONDS_IN_1_DAY = 60 * 60 * 24		# Beware: Not true at start/end day of daylight savings
 
@@ -198,12 +144,29 @@ class DSpaceDbCommunityInfo
     bitstream_ext_to_delete.each{|ext|
       # Assumes parent of dspace_saf folder (ie. 'current') is a symlink to coll['label']
       fglob = "#{SAF_DIR}/*/*.#{ext}{,.txt}"	# Matches XXXX.ext & XXXX.ext.txt
-      # For case insensitive, use glob-flag File::FNM_CASEFOLD
+
+      # For case insensitive, use File::FNM_CASEFOLD
       Dir.glob(fglob).each{|fpath|
-        next unless fpath.match(/\/results\/current\/dspace_saf\/\d+\//)
+        next unless fpath.match(REGEX_DELETE_BITSTREAM_FPATH)
         FileUtils.rm_f(fpath)
       }
     }
+  end
+
+  ############################################################################
+  def self.has_same_parent_dir?(filepaths_dirpaths)
+    return false unless filepaths_dirpaths.kind_of?(Array)
+    return false if filepaths_dirpaths.length < 2	# Must be at least 2 files/dirs
+
+    return false unless filepaths_dirpaths.first.kind_of?(String)
+    parent_dir1 = File.dirname(filepaths_dirpaths[0])	# Parent dir of first element
+    return false unless parent_dir1.match("^/")		# Must be absolute file path
+
+    filepaths_dirpaths.each{|f|
+      return false unless f.kind_of?(String)
+      return false unless File.dirname(f) == parent_dir1	# Must be same as first element
+    }
+    true
   end
 
   ############################################################################
@@ -222,7 +185,12 @@ class DSpaceDbCommunityInfo
         [working_dir,     TEMP_DIR],
         [current_out_dir, OUT_DIR],
       ].each{|dir, symlink_to_dir|
-        # FIXME: Check dir & symlink_to_dir have the same parent dir.
+        unless has_same_parent_dir?( [dir, symlink_to_dir] )
+          STDERR.puts "ERROR: The following paths do NOT have the same parent folder:"
+          STDERR.puts "  Folder:  #{dir}"
+          STDERR.puts "  Symlink: #{symlink_to_dir}"
+          exit 10
+        end
 
         # dir is a real directory holding files, etc.
         # symlink_to_dir is a symlink which points to dir.
@@ -233,14 +201,27 @@ class DSpaceDbCommunityInfo
         FileUtils.remove_entry_secure(dir, true)
         FileUtils.rm_f(symlink_to_dir)
         FileUtils.mkdir_p(dir)
+
         FileUtils.ln_s(File.basename(dir), symlink_to_dir)
+
+        unless File.symlink?(symlink_to_dir)	# Confirm symlink was created
+          STDERR.puts "ERROR: The path below is not a symlink:"
+          STDERR.puts "  #{symlink_to_dir}"
+          exit 10
+        end
       }
     end
 
-    # FIXME: Check above symlink exists
-    FileUtils.mkdir_p(SAF_DIR)
+    s_symlink_regex = "^#{OUT_DIR}/."
+    unless SAF_DIR.match(s_symlink_regex)
+      STDERR.puts "ERROR: The symlink below is not a sub-path of the folder-path below:"
+      STDERR.puts "  Folder:  #{SAF_DIR}"
+      STDERR.puts "  Symlink: #{OUT_DIR}"
+      exit 10
+    end
 
-    # FIXME: These are in etc dir so are overwritten for each run. Should they be moved to working dir?
+    FileUtils.mkdir_p(SAF_DIR)	# The OUT_DIR symlink is a sub-path of this dir
+
     [FPATH_COLLECTION_LEVEL_XML, FPATH_OJS_IMPORT_BEGIN].each{|fname|
       FileUtils.remove_file(fname, true)
     }
@@ -257,7 +238,7 @@ class DSpaceDbCommunityInfo
 
       # DSpace Simple Archive Format (SAF) export
       cmd = "%s export -t COLLECTION  -i %s -d %s -n %d > %s 2> %s" %
-        [DSPACE_APP, coll['collection_hdl'], SAF_DIR, SAF_SEQNUM_MIN,
+        [DSPACE_COMMAND_LINE_APP, coll['collection_hdl'], SAF_DIR, SAF_SEQNUM_MIN,
         FPATH_DSPACE_SAF_EXPORT_LOG, FPATH_DSPACE_SAF_EXPORT_LOG2]
       `#{cmd}`
       res = $?
@@ -320,24 +301,29 @@ class DSpaceDbCommunityInfo
     }
   end
 
+  ############################################################################
+  def self.main
+    journal_key = :wic
+    puts "\nJournal key:   #{journal_key}"
+    journal = JOURNALS[journal_key]
+
+    if WILL_PROCESS_1_COLLECTION_BY_DATE
+      # Process 1 collection (by date)
+      process_1_collection_by_date(journal[:community_hdl])
+
+    else
+      # Process collection list for a given journal/community
+      process_collection_list(
+        journal[:community_hdl],
+        journal[:collection_regex_list]
+      )
+    end
+  end
+
 end
 
 ##############################################################################
 # Main
 ##############################################################################
-journal_key = :wic
-puts "\nJournal key:   #{journal_key}"
-journal = DSpaceDbCommunityInfo::JOURNALS[journal_key]
-
-if WILL_PROCESS_1_COLLECTION_BY_DATE
-  # Process 1 collection (by date)
-  DSpaceDbCommunityInfo.process_1_collection_by_date(journal[:community_hdl])
-
-else
-  # Process collection list for a given journal/community
-  DSpaceDbCommunityInfo.process_collection_list(
-    journal[:community_hdl],
-    journal[:collection_regex_list]
-  )
-end
+DSpaceDbCommunityInfo.main
 

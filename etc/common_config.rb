@@ -4,6 +4,13 @@
 # See the accompanying LICENSE file (or http://opensource.org/licenses/BSD-3-Clause).
 #
 # Common config vars for ruby (and sh/bash)
+#
+# It is expected you will typically customise variables labelled "CUSTOMISE"
+# in this script and other scripts.
+#
+# BEWARE: You should take great care if you choose to customise other
+# variables as some files/directories are (recursively) deleted!
+#
 ##############################################################################
 module CommonConfig
   TOP_DIR  = File.expand_path("..", File.dirname(__FILE__))	# Top level dir
@@ -54,13 +61,16 @@ module CommonConfig
   FNAME_DC         = "dublin_core.xml"	# DSpace SAF dublin-core XML file
   FNAME_DSPACE_EXT = "dc_extended.xml"	# Intermediate result of this script; XML based on FNAME_DC
 
+  # Other
+  URL_PREFIX_DSPACE_BITSTREAM = "http://dspace.flinders.edu.au/xmlui/bitstream/"	# CUSTOMISE
+
   ############################################################################
   # Constants required for the scheduled/auto DOAJ XML creation script
   ############################################################################
   SAF_SEQNUM_MIN = 10001
 
   DSPACE_TO_OJS_WRAP_SCRIPT = "#{BIN_DIR}/dspace_saf2ojs_wrap.sh"
-  DSPACE_APP                = "#{ENV['HOME']}/dspace/bin/dspace" # FIXME: Better name Eg. DSPACE_COMMAND
+  DSPACE_COMMAND_LINE_APP   = "#{ENV['HOME']}/dspace/bin/dspace"	# CUSTOMISE
 
   FPATH_DSPACE_SAF_EXPORT_LOG   = "#{TEMP_DIR}/dspace_saf_export.log.txt"
   FPATH_DSPACE_SAF_EXPORT_LOG2  = "#{TEMP_DIR}/dspace_saf_export.err.txt"
@@ -68,7 +78,69 @@ module CommonConfig
   FPATH_DSPACE_TO_OJS_WRAP_LOG  = "#{TEMP_DIR}/dspace_saf2ojs_wrap.log.txt"
   FPATH_DSPACE_TO_OJS_WRAP_LOG2 = "#{TEMP_DIR}/dspace_saf2ojs_wrap.err.txt"
 
-  FPATH_DOAJ_XML_TARGET_TOP_DIR = "#{TOP_DIR}/testtarget"
+  FPATH_DOAJ_XML_TARGET_TOP_DIR = "#{TOP_DIR}/testtarget"		# CUSTOMISE
+
+  ############################################################################
+  # Sanity check that a bitstream being deleted matches the expected path
+  # Eg. .../results/current/dspace_saf/99999/...
+  REGEX_DELETE_BITSTREAM_FPATH = /\/results\/current\/dspace_saf\/\d+\//
+
+  # true  = Process 1 collection (ie. journal issue) by date
+  # false = Process a list of collections
+  WILL_PROCESS_1_COLLECTION_BY_DATE = true	# CUSTOMISE
+
+  # Search for journal-issue month & year with this offset from today.
+  # See DSpaceDbCommunityInfo.collection_name_regex()
+  DAYS_OFFSET = 7				# CUSTOMISE if WILL_PROCESS_1_COLLECTION_BY_DATE == true
+
+  HANDLE_PREFIX = "123456789"			# CUSTOMISE if WILL_PROCESS_1_COLLECTION_BY_DATE == false
+
+  # CUSTOMISE
+  # - :community_hdl must be configured for your journal community handle
+  # - :collection_regex_list only needs to be configured if you will process a
+  #   list of collections ie. if WILL_PROCESS_1_COLLECTION_BY_DATE == false
+  JOURNALS = {
+    :wic => {
+      :community_hdl => "#{HANDLE_PREFIX}/27255",
+      :collection_regex_list => [
+        # Regex must match only one collection (ie. journal issue)
+        /February 2014/i,
+          /August 2014/i,
+        /February 2015/i,
+          /August 2015/i,
+        /February 2016/i,
+          /August 2016/i,
+      ],
+    },
+
+    :tnl => {
+      :community_hdl => "#{HANDLE_PREFIX}/3206",
+      :collection_regex_list => [
+        # Regex must match only one collection (ie. journal issue)
+        /November 2008/i,
+             /May 2009/i,
+        /November 2009/i,
+
+             /May 2010/i,
+        /November 2010/i,
+             /May 2011/i,
+        /November 2011/i,
+
+             /May 2012/i,
+        /November 2012/i,
+             /May 2013/i,
+        /November 2013/i,
+
+             /May 2014/i,
+        /November 2014/i,
+             /May 2015/i,
+        /November 2015/i,
+
+             /May 2016/i,
+        /November 2016/i, # Cannot extract volume & issue from Special Issue December 2016. Hence items mapped into November 2016.
+      ],
+    },
+  }
 
 end
 

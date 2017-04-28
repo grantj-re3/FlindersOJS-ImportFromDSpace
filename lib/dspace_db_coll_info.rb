@@ -51,14 +51,14 @@ class DSpaceDbCollectionInfo
 	  col.short_description collection_desc,
 
 	  com.community_id parent_community_id,
-	  (select handle from handle where resource_type_id=4 and resource_id=com.community_id) parent_community_hdl,
+	  (select handle from handle where resource_type_id=#{RESOURCE_TYPE_IDS[:community]} and resource_id=com.community_id) parent_community_hdl,
 	  com.name parent_community_name
 	from
 	  collection col,
 	  handle h,
 	  community2collection com2col,
 	  community com
-	where col.collection_id=h.resource_id and h.resource_type_id=3 and h.handle='%s' and
+	where col.collection_id=h.resource_id and h.resource_type_id=#{RESOURCE_TYPE_IDS[:collection]} and h.handle='%s' and
 	  col.collection_id=com2col.collection_id and com2col.community_id=com.community_id
       SQL_COLLECTION
     },
@@ -77,7 +77,7 @@ class DSpaceDbCollectionInfo
       # sprintf() format string. "%s" will be populated with collection_hdl.
       :sql_fmt => <<-SQL_BITSTREAM_URLS.gsub(/^\t*/, '')
 	select
-	  'http://dspace.flinders.edu.au/xmlui/bitstream/' || i.item_hdl || '/' || b.sequence_id || '/bitstream' bitstream_url,
+	  '#{URL_PREFIX_DSPACE_BITSTREAM}' || i.item_hdl || '/' || b.sequence_id || '/bitstream' bitstream_url,
 	  b.sequence_id,
 	  i.item_id,
 	  i.item_hdl,
@@ -91,12 +91,12 @@ class DSpaceDbCollectionInfo
 	from 
 	  ( select
               item_id,
-              (select handle from handle where resource_type_id=2 and resource_id=col2i.item_id) item_hdl,
+              (select handle from handle where resource_type_id=#{RESOURCE_TYPE_IDS[:item]} and resource_id=col2i.item_id) item_hdl,
               h.resource_id collection_id,
               h.handle collection_hdl
 	    from
               collection2item col2i,
-              (select resource_id, handle from handle where resource_type_id=3 and handle='%s') h
+              (select resource_id, handle from handle where resource_type_id=#{RESOURCE_TYPE_IDS[:collection]} and handle='%s') h
             where col2i.collection_id=h.resource_id
 	  ) i,
 	  bitstream b
