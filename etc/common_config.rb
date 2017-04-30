@@ -95,6 +95,8 @@ module CommonConfig
 
   HANDLE_PREFIX = "123456789"			# CUSTOMISE if WILL_PROCESS_1_COLLECTION_BY_DATE == false
 
+  JOURNAL_KEY = :wic				# CUSTOMISE: Key for JOURNALS hash below
+
   # CUSTOMISE
   # - :community_hdl must be configured for your journal community handle
   # - :collection_regex_list only needs to be configured if you will process a

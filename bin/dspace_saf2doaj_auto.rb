@@ -119,7 +119,12 @@ class DSpaceDbCommunityInfo
   def find_collection_matching_name(collection_name_regex)
     puts "\nSearching for: #{collection_name_regex.inspect}"
     coll = @collections.find{|c| c["collection_name"].match(collection_name_regex)}
-    puts "\nFound:         #{coll.inspect}"
+    puts "Found:         #{coll['collection_name']} (#{coll['collection_hdl']}); #{coll['community_name']} (#{coll['community_hdl']})"
+    if coll.nil?
+      STDERR.puts "Quitting: Within eJournal community with handle #{@community_hdl},"
+      STDERR.puts "  no collection was found matching #{collection_name_regex.inspect}"
+      exit 8
+    end
     coll
   end
 
@@ -230,9 +235,8 @@ class DSpaceDbCommunityInfo
   ############################################################################
   def self.process_collection(coll)
     if coll.nil?
-      STDERR.puts "Quitting: Within eJournal community with handle #{community_hdl},"
-      STDERR.puts "  no collection was found matching #{regex.inspect}"
-      exit 8
+      STDERR.puts "ERROR: Collection is nil in method #{self}.#{__method__}"
+      exit 11
     else
       cleanup_dirs_files(coll)
 
@@ -246,6 +250,15 @@ class DSpaceDbCommunityInfo
       unless "#{res}" == "0"
         STDERR.puts "DSpace SAF export failed with exit-code #{res}. See file #{File.basename(FPATH_DSPACE_SAF_EXPORT_LOG2)}"
         exit "#{res}".to_i
+      end
+
+      # Were any items exported?
+      cmd = "ls -1 #{SAF_DIR} |wc -l"
+      s_item_count = `#{cmd}`.chomp
+      if s_item_count == "0"
+        STDERR.puts "DSpace SAF export is empty for collection handle %s (%s; %s)" %
+          [coll['collection_hdl'], coll['community_name'], coll['collection_name']]
+        exit 12
       end
 
       # Do DSpace SAF to DOAJ (& OJS) translation
@@ -262,7 +275,7 @@ class DSpaceDbCommunityInfo
 
       # Copy files to target dir, FPATH_DOAJ_XML_TARGET_DIR
       target_dir = "#{FPATH_DOAJ_XML_TARGET_TOP_DIR}/#{coll['label']}"
-      puts "\nTarget folder: '#{target_dir}'"
+      puts "Target folder: '#{target_dir}'"
       FileUtils.mkdir_p(target_dir)
 
       src_files = [
@@ -303,9 +316,8 @@ class DSpaceDbCommunityInfo
 
   ############################################################################
   def self.main
-    journal_key = :wic
-    puts "\nJournal key:   #{journal_key}"
-    journal = JOURNALS[journal_key]
+    puts "\nJournal key:   #{JOURNAL_KEY}"
+    journal = JOURNALS[JOURNAL_KEY]
 
     if WILL_PROCESS_1_COLLECTION_BY_DATE
       # Process 1 collection (by date)
