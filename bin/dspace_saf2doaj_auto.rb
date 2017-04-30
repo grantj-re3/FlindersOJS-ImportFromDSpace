@@ -119,12 +119,12 @@ class DSpaceDbCommunityInfo
   def find_collection_matching_name(collection_name_regex)
     puts "\nSearching for: #{collection_name_regex.inspect}"
     coll = @collections.find{|c| c["collection_name"].match(collection_name_regex)}
-    puts "Found:         #{coll['collection_name']} (#{coll['collection_hdl']}); #{coll['community_name']} (#{coll['community_hdl']})"
     if coll.nil?
       STDERR.puts "Quitting: Within eJournal community with handle #{@community_hdl},"
       STDERR.puts "  no collection was found matching #{collection_name_regex.inspect}"
       exit 8
     end
+    puts "Found:         #{coll['collection_name']} (#{coll['collection_hdl']}); #{coll['community_name']} (#{coll['community_hdl']})"
     coll
   end
 
