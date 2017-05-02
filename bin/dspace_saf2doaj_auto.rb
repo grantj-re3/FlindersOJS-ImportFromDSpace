@@ -291,7 +291,7 @@ class DSpaceDbCommunityInfo
 =end
       ]
       FileUtils.cp(src_files, target_dir)
-      delete_bitstreams(coll)	# We don't need bitstreams for DOAJ
+      delete_bitstreams(coll) if WILL_DELETE_BITSTREAMS
     end
   end
 

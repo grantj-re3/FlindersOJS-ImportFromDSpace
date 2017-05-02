@@ -85,6 +85,18 @@ module CommonConfig
   # Eg. .../results/current/dspace_saf/99999/...
   REGEX_DELETE_BITSTREAM_FPATH = /\/results\/current\/dspace_saf\/\d+\//
 
+  # CUSTOMISE: OJS & DOAJ bulk import files are created via the DSpace
+  # Simple Archive Format (SAF) export tool. This tool always creates a
+  # copy of the bitstreams (typically full-text PDF files). These bistreams
+  # can occupy a lot of disk space - especially if the collections contain
+  # many items and if this app is processing a list of collections.
+  # - The OJS import process requires the bitstreams hence we recommend
+  #   you set the var below to false if your target app is OJS.
+  # - DOAJ does not require the bitstreams (as it only requires the URL
+  #   of the bitstreams in DSpace). Hence we recommend you set the var
+  #   below to true if your target app is DOAJ.
+  WILL_DELETE_BITSTREAMS = false
+
   # true  = Process 1 collection (ie. journal issue) by date
   # false = Process a list of collections
   WILL_PROCESS_1_COLLECTION_BY_DATE = true	# CUSTOMISE
