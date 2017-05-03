@@ -3,12 +3,16 @@
 # Contributors: Library, Corporate Services, Flinders University.
 # See the accompanying LICENSE file (or http://opensource.org/licenses/BSD-3-Clause).
 #
-# Common config vars for ruby (and sh/bash)
+# Common config vars for ruby.
+# Most of these vars are also copied so they can be used by sh/bash scripts.
 #
-# It is expected you will typically customise variables labelled "CUSTOMISE"
-# in this script and other scripts.
+# It is expected you will typically customise variables (and methods)
+# labelled "CUSTOMISE" in:
+# - common_config.rb (this script)
+# - populate_tpl_from_coll_info.rb
+# - dspace_saf2doaj_auto.rb
 #
-# BEWARE: You should take great care if you choose to customise other
+# BEWARE: You should take GREAT CARE if you choose to customise other
 # variables as some files/directories are (recursively) deleted!
 #
 ##############################################################################
@@ -69,7 +73,7 @@ module CommonConfig
   ############################################################################
   SAF_SEQNUM_MIN = 10001
 
-  DSPACE_TO_OJS_WRAP_SCRIPT = "#{BIN_DIR}/dspace_saf2ojs_wrap.sh"
+  DSPACE_TO_OJS_WRAP_SCRIPT = "#{LIB_DIR}/dspace_saf2ojs_wrap.sh"
   DSPACE_COMMAND_LINE_APP   = "#{ENV['HOME']}/dspace/bin/dspace"	# CUSTOMISE
 
   FPATH_DSPACE_SAF_EXPORT_LOG   = "#{TEMP_DIR}/dspace_saf_export.log.txt"
@@ -95,7 +99,7 @@ module CommonConfig
   # - DOAJ does not require the bitstreams (as it only requires the URL
   #   of the bitstreams in DSpace). Hence we recommend you set the var
   #   below to true if your target app is DOAJ.
-  WILL_DELETE_BITSTREAMS = false
+  WILL_DELETE_BITSTREAMS = true
 
   # true  = Process 1 collection (ie. journal issue) by date
   # false = Process a list of collections

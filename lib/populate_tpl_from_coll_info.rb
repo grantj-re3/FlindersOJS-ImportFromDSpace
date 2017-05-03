@@ -32,11 +32,21 @@ require "common_config"
 class SubstitutionTemplate
   include CommonConfig
 
-  MONTH_NAME_REGEX = /^(January|February|March|April|May|June|July|August|September|October|November|December)$/i
+  # CUSTOMISE: Regex to extract volume no, issue no, month name & year from
+  # collection names like:
+  # - "Volume 3, Issue 2, August 2016", or
+  # - "Volume 3, No. 2 August 2016"
+  # Used in gather_extra_collection_fields() below.
   COLLECTION_NAME_REGEX = /^Volume +(\d+)[, ]+(No\.|Issue) +(\d+)[, ]+(\w+) +(\d{4})($|[^\d])/
-  EXTRA_COLLECTION_FIELD_KEYS = [:volume_num, :issue_num, :month_name, :year, :issn, :date_pub, :date_from_collection_name]
 
   YEAR_RANGE = 1900..2050		# Valid journal publication year-range
+
+  MONTH_NAME_REGEX = /^(January|February|March|April|May|June|July|August|September|October|November|December)$/i
+  EXTRA_COLLECTION_FIELD_KEYS = [
+    :date_pub, :issn,
+    :volume_num, :issue_num, :month_name, :year,
+    :date_from_collection_name,
+  ]
 
   ############################################################################
   def initialize(collection_hdl, collection_fields, collection_date_pub, collection_issn)
@@ -49,6 +59,8 @@ class SubstitutionTemplate
   end
 
   ############################################################################
+  # CUSTOMISE this method to extract volume no, issue no, year, etc from
+  # your DSpace collection name
   def gather_extra_collection_fields
     xcf = @extra_collection_fields
     @collection_fields["collection_name"].match(COLLECTION_NAME_REGEX)

@@ -45,8 +45,9 @@ require "common_config"
 
 ##############################################################################
 class DSpaceDbCommunityInfo
+  CONFIG_MOD = CommonConfig
+  include CONFIG_MOD
   include DSpacePgUtils
-  include CommonConfig
 
   SECONDS_IN_1_DAY = 60 * 60 * 24		# Beware: Not true at start/end day of daylight savings
 
@@ -143,14 +144,19 @@ class DSpaceDbCommunityInfo
 
   ############################################################################
   def self.delete_bitstreams(coll)
-    bitstream_ext_to_delete = %w{pdf}
+    bitstream_ext_to_delete = %w{pdf}	# List file extensions in lower case
+    # For each ext, we will match (hence delete) FILE.ext, FILE.EXT, FILE.ext.txt, FILE.EXT.txt
+    bitstream_ext_to_delete += bitstream_ext_to_delete.map{|ext| ext.upcase}
+    bitstream_ext_to_delete += bitstream_ext_to_delete.map{|ext| "#{ext}.txt"}
     puts "Deleting bitstreams in folder '#{coll['label']}' with extensions #{bitstream_ext_to_delete.inspect}"
 
     bitstream_ext_to_delete.each{|ext|
       # Assumes parent of dspace_saf folder (ie. 'current') is a symlink to coll['label']
-      fglob = "#{SAF_DIR}/*/*.#{ext}{,.txt}"	# Matches XXXX.ext & XXXX.ext.txt
+      fglob = "#{SAF_DIR}/*/*.#{ext}"
 
-      # For case insensitive, use File::FNM_CASEFOLD
+      # I do not want to use File::FNM_CASEFOLD to achieve a case insensitive
+      # match for the file-extension as this does a case insensitive match
+      # of the whole file-path (which is too permissive for a delete action).
       Dir.glob(fglob).each{|fpath|
         next unless fpath.match(REGEX_DELETE_BITSTREAM_FPATH)
         FileUtils.rm_f(fpath)
@@ -316,7 +322,10 @@ class DSpaceDbCommunityInfo
 
   ############################################################################
   def self.main
-    puts "\nJournal key:   #{JOURNAL_KEY}"
+    puts "Creating OJS & DOAJ import formats"
+    puts "----------------------------------"
+    puts "Config module: #{CONFIG_MOD}"
+    puts "Journal key:   #{JOURNAL_KEY}"
     journal = JOURNALS[JOURNAL_KEY]
 
     if WILL_PROCESS_1_COLLECTION_BY_DATE
